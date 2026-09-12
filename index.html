@@ -5,8 +5,10 @@
   (function () {
     try {
       var t = localStorage.getItem('judex-theme');
-      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
-    } catch (e) {}
+      document.documentElement.setAttribute('data-theme', (t === 'dark') ? 'dark' : 'light');
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
   })();
 </script>
 <meta charset="UTF-8">
@@ -36,25 +38,6 @@
     --sans: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
     --serif: 'Noto Serif KR', 'AppleMyungjo', 'Batang', Georgia, serif;
     color-scheme: light;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #16171A;
-      --surface: #1F2126;
-      --ink: #EDEBE6;
-      --body: #B5B2AB;
-      --muted: #8E8B85;
-      --line: #34363C;
-      --crimson: #B8404C;
-      --crimson-soft: #F0D3D6;
-      --navy: #1E2740;
-      --navy-2: #2C3858;
-      --navy-text: #C3C9D8;
-      --gold: #CFAE66;
-      --footer: #0F1012;
-      --footer-text: #9E9C96;
-      color-scheme: dark;
-    }
   }
   :root[data-theme="dark"] {
     --bg: #16171A;
@@ -130,11 +113,10 @@
   /* ---------- Shared grid ---------- */
   .grid {
     display: grid;
-    grid-template-columns: 320px minmax(0, 760px);
-    column-gap: 152px;
+    grid-template-columns: minmax(0, 760px);
     padding: 0 48px;
   }
-  .grid > .col-main { grid-column: 2; }
+  .grid > .col-main { grid-column: 1; }
 
   /* ---------- Hero ---------- */
   .hero { padding-top: 120px; padding-bottom: 104px; }
@@ -160,27 +142,6 @@
 
   /* ---------- Body with TOC ---------- */
   .body { padding-bottom: 104px; align-items: start; }
-  .toc {
-    position: sticky; top: 96px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    padding: 26px 28px 30px;
-  }
-  .toc-title { margin: 0 0 18px; font-size: 15px; font-weight: 500; color: var(--body); }
-  .toc ol { list-style: none; margin: 0; padding: 0 0 0 18px; border-left: 2px solid var(--line); }
-  .toc li + li { margin-top: 14px; }
-  .toc a {
-    display: block; position: relative;
-    text-decoration: underline; text-decoration-color: var(--gold);
-    text-underline-offset: 4px; text-decoration-thickness: 1px;
-    font-size: 16px; line-height: 1.4;
-  }
-  .toc a.active { font-weight: 700; text-decoration: none; }
-  .toc a.active::before {
-    content: ""; position: absolute; left: -20px; top: -3px; bottom: -3px;
-    width: 2px; background: var(--ink);
-  }
 
   .col-main > section + section { margin-top: 96px; }
   .label {
@@ -307,13 +268,10 @@
 
   /* ---------- Responsive ---------- */
   @media (max-width: 1280px) {
-    .grid { column-gap: 64px; grid-template-columns: 260px minmax(0, 1fr); }
   }
   @media (max-width: 960px) {
     .nav-links { display: none; }
     .grid { grid-template-columns: minmax(0, 1fr); padding: 0 24px; }
-    .grid > .col-main { grid-column: 1; }
-    .toc { display: none; }
     .nav-inner { padding: 16px 24px; }
     .hero { padding-top: 72px; padding-bottom: 64px; }
     footer { padding: 40px 24px; }
@@ -374,19 +332,6 @@
   </section>
 
   <div class="body grid">
-    <aside class="toc" aria-label="On this page">
-      <p class="toc-title">On this page</p>
-      <ol>
-        <li><a href="#question">질문</a></li>
-        <li><a href="#approach">접근</a></li>
-        <li><a href="#research">연구 분야</a></li>
-        <li><a href="#applied">적용 연구</a></li>
-        <li><a href="#publications">저서</a></li>
-        <li><a href="#director">Director</a></li>
-        <li><a href="#contact">문의</a></li>
-      </ol>
-    </aside>
-
     <div class="col-main">
 
       <section id="question" aria-labelledby="h-question">
@@ -527,33 +472,10 @@
 
 <script>
   (function () {
-    var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
-    if (!links.length || !('IntersectionObserver' in window)) return;
-    var map = {};
-    links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
-    function setActive(id) {
-      links.forEach(function (a) { a.classList.remove('active'); a.removeAttribute('aria-current'); });
-      if (map[id]) { map[id].classList.add('active'); map[id].setAttribute('aria-current', 'true'); }
-    }
-    setActive('question');
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { if (e.isIntersecting) setActive(e.target.id); });
-    }, { rootMargin: '-30% 0px -60% 0px' });
-    Object.keys(map).forEach(function (id) { var el = document.getElementById(id); if (el) io.observe(el); });
-  })();
-</script>
-<script>
-  (function () {
     var btn = document.querySelector('.theme-toggle');
     if (!btn) return;
     var root = document.documentElement;
-    var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-    function isDark() {
-      var t = root.getAttribute('data-theme');
-      if (t === 'dark') return true;
-      if (t === 'light') return false;
-      return !!(mq && mq.matches);
-    }
+    function isDark() { return root.getAttribute('data-theme') === 'dark'; }
     function sync() { btn.setAttribute('aria-pressed', isDark() ? 'true' : 'false'); }
     btn.addEventListener('click', function () {
       var next = isDark() ? 'light' : 'dark';
@@ -561,13 +483,6 @@
       try { localStorage.setItem('judex-theme', next); } catch (e) {}
       sync();
     });
-    if (mq) {
-      if (mq.addEventListener) mq.addEventListener('change', sync);
-      else if (mq.addListener) mq.addListener(sync);
-    }
-    if ('MutationObserver' in window) {
-      new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
-    }
     sync();
   })();
 </script>
